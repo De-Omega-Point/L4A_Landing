@@ -1,0 +1,11 @@
+{
+  "name": "loyalty4all-landing",
+  "version": "1.0.0",
+  "description": "Static landing page, checkout prototype, and local-first access admin for Loyalty4All.",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "check": "node scripts/check-links.mjs"
+  },
+  "devDependencies": {}
+}
