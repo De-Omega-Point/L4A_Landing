@@ -8,7 +8,7 @@ Existing work: https://github.com/De-Omega-Point/L4A_Landing/pull/1
 
 The existing seven-page prototype is now a merchant product website and optional email pilot channel. The original page structure, styles/components, repository and PR are reused. Product positioning is customer loyalty for independent businesses. The existing product logo is preserved unchanged.
 
-Visitors can explore the product, understand local data trade-offs, reach the existing Community Edition and prepare a pilot request. Requests can be reviewed, edited, copied, saved as text, cleared or opened in an email app. The website never declares that it received the request; the visitor must send it.
+Visitors can explore the product, understand local data trade-offs, reach the existing Community Edition, use its optional Insights → Join free registration and prepare a separate pilot request. Requests can be reviewed, edited, copied, saved as text, cleared or opened in an email app. The website never declares that it received the request; the visitor must send it.
 
 ## Removed
 
@@ -16,7 +16,7 @@ Driver/Restaurant/private-beta price offers; PayPal SDK and demo confirmation; f
 
 ## Infrastructure decision
 
-The inspected configuration had placeholder payment credentials and no payment/entitlement backend. The existing app has its own registration service and is public according to Sites, but that same-origin service is not a cross-origin landing-page API. No new paid infrastructure, credentials, mailing service, native download, price or subscription has been activated.
+The inspected configuration had placeholder payment credentials and no payment/entitlement backend. The current live app (Sites version 13, source commit `6d54e07c4183a9fc6ceb1252ac5b215e27bbd127`) works without compulsory registration and has optional Community Intelligence membership via `/api/community-members`. The service rejects cross-origin requests, so registration is routed through its existing app form. The native GitHub repository is behind this published version; landing-page copy was corrected against the live source. No new paid infrastructure, credentials, mailing service, native download, price or subscription has been activated.
 
 The pilot form uses the official contact address published at https://de-omega-point.com/. The email hand-off is deliberately manual; no mailbox delivery or automatic lead capture is claimed.
 
@@ -28,7 +28,7 @@ The pilot form uses the official contact address published at https://de-omega-p
 - JavaScript syntax and Git whitespace checks are required before commit.
 - Responsive layout, touch target sizes, focus styling, readable text, persistent mobile navigation and reduced-motion support are implemented.
 - Browser rendering, real-device installation, valid registration/database persistence and email delivery have not been tested. Browser-control capability was unavailable; external HTTP probes from the local environment were blocked by its network proxy.
-- GitHub CI includes an independent existing-app probe (GETs plus an invalid registration POST, no record creation) and public Pages byte-for-byte verification after publication. Results must be read from the matching commit’s workflow, not inferred from local tests.
+- GitHub CI includes an independent existing-app probe (GETs, an invalid membership POST and a forbidden cross-origin POST, no record creation) and public Pages byte-for-byte verification after publication. Results must be read from the matching commit’s workflow, not inferred from local tests.
 
 ## Commercial next gate
 
