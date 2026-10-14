@@ -1,151 +1,59 @@
-const L4A_STORAGE_KEYS = {
-  orders: 'l4a_orders',
-  currentOrder: 'l4a_current_order'
-};
-
-function getPlans() {
-  return window.L4A_CONFIG.plans;
-}
-
-function getPlan(planKey) {
-  return getPlans()[planKey] || getPlans().driver;
-}
-
-function getQueryParam(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
-
-function readOrders() {
-  try {
-    return JSON.parse(localStorage.getItem(L4A_STORAGE_KEYS.orders)) || [];
-  } catch (error) {
-    console.warn('Could not read local Loyalty4All orders.', error);
-    return [];
+(function (root) {
+  'use strict';
+  const businessTypes = ['', 'Café or food business', 'Retail', 'Hair or beauty', 'Health or fitness', 'Professional service', 'Other'];
+  function normaliseRequest(input) {
+    const clean = value => String(value ?? '').trim().replace(/[\r\n\t]+/g, ' ');
+    return {
+      businessName: clean(input.businessName),
+      email: clean(input.email).toLowerCase(),
+      contactName: clean(input.contactName),
+      businessType: clean(input.businessType),
+      privacyAccepted: input.privacyAccepted === true,
+      updatesConsent: input.updatesConsent === true
+    };
   }
-}
-
-function writeOrders(orders) {
-  localStorage.setItem(L4A_STORAGE_KEYS.orders, JSON.stringify(orders));
-}
-
-function randomCode(length = 6) {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const values = new Uint32Array(length);
-  crypto.getRandomValues(values);
-  return Array.from(values, value => alphabet[value % alphabet.length]).join('');
-}
-
-function generateSerialNumber(planKey) {
-  const plan = getPlan(planKey);
-  return `L4A-${plan.code}-${new Date().getFullYear()}-${randomCode(6)}`;
-}
-
-function createOrder({ email, planKey, paymentStatus = 'pending', accessStatus = 'pending', paypalOrderId = '' }) {
-  const plan = getPlan(planKey);
-  const now = new Date().toISOString();
-  return {
-    id: `order_${Date.now()}_${randomCode(4)}`,
-    createdAt: now,
-    updatedAt: now,
-    email,
-    planKey,
-    planLabel: plan.label,
-    amount: plan.price,
-    billing: plan.billing,
-    paymentStatus,
-    accessStatus,
-    serialNumber: generateSerialNumber(planKey),
-    appVersion: window.L4A_CONFIG.appVersion,
-    paypalOrderId
-  };
-}
-
-function saveOrder(order) {
-  const orders = readOrders();
-  const index = orders.findIndex(existing => existing.id === order.id);
-  const updatedOrder = { ...order, updatedAt: new Date().toISOString() };
-  if (index >= 0) {
-    orders[index] = updatedOrder;
-  } else {
-    orders.unshift(updatedOrder);
+  function validateRequest(data) {
+    if (!data.businessName || data.businessName.length > 120) return 'Enter a business name of up to 120 characters.';
+    if (data.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return 'Enter a valid contact email address.';
+    if (data.contactName.length > 120) return 'Keep your name to 120 characters or fewer.';
+    if (!businessTypes.includes(data.businessType)) return 'Choose a business type from the list.';
+    if (!data.privacyAccepted) return 'Please read and acknowledge the privacy notice.';
+    return '';
   }
-  writeOrders(orders);
-  localStorage.setItem(L4A_STORAGE_KEYS.currentOrder, JSON.stringify(updatedOrder));
-  return updatedOrder;
-}
-
-function findOrder(orderId) {
-  return readOrders().find(order => order.id === orderId);
-}
-
-function getCurrentOrder() {
-  const orderId = getQueryParam('order');
-  if (orderId) return findOrder(orderId);
-  try {
-    return JSON.parse(localStorage.getItem(L4A_STORAGE_KEYS.currentOrder));
-  } catch {
-    return null;
+  function buildRequestText(data, privacyVersion) {
+    return [
+      'Hello De-Omega-Point,', '',
+      'I would like to register interest in the Loyalty-4-All merchant pilot.', '',
+      `Business: ${data.businessName}`,
+      `Contact email: ${data.email}`,
+      `Contact name: ${data.contactName || 'Not provided'}`,
+      `Business type: ${data.businessType || 'Not provided'}`, '',
+      'Please reply about this pilot request.',
+      `Optional product / AI marketing / industry updates: ${data.updatesConsent ? 'YES, I opt in. I can ask to stop at any time.' : 'NO, I have not opted in.'}`,
+      `Privacy notice acknowledged: ${privacyVersion}`, '',
+      'This is an interest request, not a purchase or an app-access confirmation.'
+    ].join('\n');
   }
-}
-
-function updateOrder(orderId, updates) {
-  const orders = readOrders();
-  const index = orders.findIndex(order => order.id === orderId);
-  if (index === -1) return null;
-  orders[index] = { ...orders[index], ...updates, updatedAt: new Date().toISOString() };
-  writeOrders(orders);
-  localStorage.setItem(L4A_STORAGE_KEYS.currentOrder, JSON.stringify(orders[index]));
-  return orders[index];
-}
-
-function seedDemoOrders() {
-  if (readOrders().length) return;
-  const demo = [
-    createOrder({ email: 'owner@examplecafe.com.au', planKey: 'resto', paymentStatus: 'paid', accessStatus: 'active', paypalOrderId: 'DEMO-RESTO-001' }),
-    createOrder({ email: 'driver@example.com.au', planKey: 'driver', paymentStatus: 'pending', accessStatus: 'pending', paypalOrderId: 'DEMO-DRIVER-001' })
-  ];
-  writeOrders(demo);
-}
-
-function toCsvValue(value) {
-  return `"${String(value ?? '').replaceAll('"', '""')}"`;
-}
-
-function exportOrdersCsv() {
-  const orders = readOrders();
-  const fields = ['id', 'createdAt', 'email', 'planLabel', 'amount', 'billing', 'paymentStatus', 'accessStatus', 'serialNumber', 'appVersion', 'paypalOrderId'];
-  const csv = [fields.join(','), ...orders.map(order => fields.map(field => toCsvValue(order[field])).join(','))].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `loyalty4all-orders-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(link.href);
-}
-
-// Backend integration placeholders. Keep this static prototype honest: browser-side payment status is not authoritative.
-async function confirmPaymentWithBackend(order) {
-  // TODO: Call PayPal Orders API from a backend only. Never expose PayPal secrets in frontend JavaScript.
-  // TODO: Verify PayPal payment capture status, amount, currency, payer email, and order/subscription ID server-side.
-  // TODO: Handle PayPal webhook events for PAYMENT.CAPTURE.COMPLETED, BILLING.SUBSCRIPTION.ACTIVATED, and failed payments.
-  // TODO: Check active subscription status before issuing or reissuing any Google Drive download link.
-  // TODO: Persist verified orders to Google Sheets through Google Apps Script or a proper database.
-  return saveOrder({ ...order, paymentStatus: 'paid', accessStatus: 'active', paypalOrderId: order.paypalOrderId || `STATIC-${randomCode(8)}` });
-}
-
-window.L4A = {
-  getPlan,
-  getPlans,
-  getQueryParam,
-  readOrders,
-  writeOrders,
-  createOrder,
-  saveOrder,
-  findOrder,
-  updateOrder,
-  getCurrentOrder,
-  generateSerialNumber,
-  seedDemoOrders,
-  exportOrdersCsv,
-  confirmPaymentWithBackend
-};
+  function buildMailto(recipient, body) {
+    if (!/^[^\s@?&#]+@[^\s@?&#]+\.[^\s@?&#]+$/.test(recipient)) throw new Error('Invalid contact address.');
+    return `mailto:${recipient}?subject=${encodeURIComponent('Loyalty-4-All merchant pilot interest')}&body=${encodeURIComponent(body)}`;
+  }
+  function forgetLegacyData(storage) {
+    // Never call clear(): this origin may host other products.
+    storage.removeItem('l4a_orders');
+    storage.removeItem('l4a_current_order');
+  }
+  root.L4A = Object.freeze({ normaliseRequest, validateRequest, buildRequestText, buildMailto, forgetLegacyData });
+  if (typeof document !== 'undefined') {
+    const button = document.querySelector('[data-clear-legacy]');
+    button?.addEventListener('click', () => {
+      const status = document.querySelector('[data-legacy-status]');
+      try {
+        forgetLegacyData(root.localStorage);
+        status.textContent = 'Old prototype order data removed from this website. App records and email are unchanged.';
+      } catch {
+        status.textContent = 'Browser storage is unavailable. You can manage this website’s data in browser settings.';
+      }
+    });
+  }
+})(typeof window !== 'undefined' ? window : globalThis);

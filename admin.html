@@ -1,1 +1,31 @@
-<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Admin prototype | Loyalty4All</title><link rel="stylesheet" href="assets/css/styles.css"></head><body><header class="site-header"><div class="container nav"><a class="logo" href="index.html"><span class="logo-mark">L4A</span><span>Loyalty4All</span></a><nav class="nav-links"><a href="index.html">Home</a><a href="pricing.html">Plans</a></nav><a class="btn small" href="checkout.html">New order</a></div></header><main><section class="section alt"><div class="container"><div class="section-head"><span class="eyebrow">Local-first admin</span><h1>Access management prototype.</h1><p class="lead">This admin stores orders in localStorage for static testing. It is structured to later connect to Google Sheets through Google Apps Script.</p></div><div class="admin-toolbar"><button class="btn" data-export-csv type="button">Export CSV</button><button class="btn secondary" data-reset-demo type="button">Reset demo data</button><p class="notice">TODO: Replace localStorage with Google Apps Script, verify PayPal webhooks server-side, and issue short-lived Google Drive links only for active paid access.</p></div><div class="table-wrap"><table><thead><tr><th>Order</th><th>Customer email</th><th>Plan</th><th>Payment status</th><th>Serial number</th><th>Access status</th><th>App version</th><th>Actions</th></tr></thead><tbody data-orders-body></tbody></table></div></div></section></main><footer class="site-footer"><div class="container footer-grid"><p>© 2026 Loyalty4All.</p><p><a href="privacy.html">Privacy</a></p></div></footer><script src="assets/js/config.js"></script><script src="assets/js/core.js"></script><script src="assets/js/admin.js" defer></script></body></html>
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#086b5f">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Operator information | Loyalty-4-All</title>
+  <meta name="description" content="The earlier browser-based admin prototype has been retired. No customer records or access controls are exposed here.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="assets/images/loyalty-4-all-logo.png" type="image/png">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script src="assets/js/config.js" defer></script>
+  <script src="assets/js/core.js" defer></script>
+
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="logo" href="index.html" aria-label="Loyalty-4-All home"><img class="product-logo" src="assets/images/loyalty-4-all-logo.png" width="64" height="64" alt=""><span>Loyalty-4-All<small>A De-Omega-Point project</small></span></a>
+      <nav class="nav-links" aria-label="Main navigation"><a href="index.html">Product</a><a href="pricing.html">Community & pilot</a><a href="download.html">Get the app</a><a href="checkout.html">Register interest</a></nav>
+    </div>
+  </header>
+  <main id="main">
+  <section class="section alt"><div class="container narrow panel"><span class="eyebrow">Operator information</span><h1>The prototype admin is retired.</h1><p class="lead">Customer registration, payments and app access cannot be managed from this public website.</p><p>No order list, activation controls or customer information is exposed here. Operator implementation and release notes are maintained in the GitHub repository.</p><div class="button-row"><a class="btn" href="index.html">Return to product</a><a class="btn secondary" href="privacy.html">Data & privacy</a></div></div></section>
+</main>
+  <footer class="site-footer"><div class="container footer-grid"><div><strong>Loyalty-4-All</strong><p>Local business. Lasting connections.</p><a href="https://de-omega-point.com/">By De-Omega-Point ↗</a></div><nav aria-label="Footer navigation"><a href="privacy.html">Privacy & data</a><a href="mailto:hello@de-omega-point.com">Contact us</a><a href="download.html">App access</a></nav><p class="help">© 2026 De-Omega-Point<br>Merchant pilot · Online payments unavailable</p></div></footer>
+</body>
+</html>

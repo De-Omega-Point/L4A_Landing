@@ -1,117 +1,74 @@
-# Loyalty4All static access site
+# Loyalty-4-All merchant website
 
-A mobile-first static landing page and lightweight access-management prototype for **Loyalty4All**. It sells app access, starts PayPal Checkout, records prototype orders in `localStorage`, issues serial numbers, and unlocks download/install instructions after payment confirmation.
+A mobile-friendly product website for **Loyalty-4-All Community Edition**, reusing the seven-page static implementation from PR #1. It explains the merchant loyalty product and offers an optional email-based pilot request. Online payments and paid entitlements are unavailable.
 
-## Pages
+## Customer journeys
 
-- `index.html` — landing page with hero, problem, solution, how it works, plans, privacy promise, FAQ and CTA.
-- `pricing.html` — Driver, Restaurant and private beta plan cards.
-- `checkout.html` — email capture, PayPal button area and demo payment confirmation.
-- `success.html` — payment confirmation and serial summary.
-- `download.html` — active-access download page with PWA, ZIP and future APK install guidance.
-- `privacy.html` — payment and access data privacy copy.
-- `admin.html` — local-first access admin prototype with activate, suspend, reissue and CSV export actions.
+- **Explore:** Product → Community & pilot → Get the app → existing Community Edition.
+- **Optional pilot:** Register interest → valid details + privacy acknowledgement → review → compose email / copy / save text → visitor sends via their email provider.
+- **No JavaScript / no mail app:** a direct contact address is provided; copy into webmail or use the text-file fallback.
+- **Old links:** `checkout.html?plan=driver` opens the pilot form. `success.html?order=anything` cannot confirm a payment or registration. `download.html` ignores browser order records and does not grant paid access. `admin.html` is a non-functional retirement notice, with no order table or activation controls.
 
-## Run locally
+A prepared email is **not a received lead**. There is no automated acknowledgement, mailing-list subscription, account creation or paid access issuance. The visitor must send the email. Test the receiving mailbox separately before campaigns; publishing a contact address does not establish mailbox deliverability.
 
-```bash
-npm run start
-```
+## Source evidence
 
-Open `http://localhost:8000`.
+- Existing product: `De-Omega-Point/L-4-A-2Market`, `README.md`, `public/community/index.html`, `public/community/js/*`, `public/community/privacy.html`, `public/community/config.js`, `app/api/register/route.ts`.
+- Existing Sites identity: `appgprj_6a6b5fb6e2c0819187c6ae3e75606052`; public URL returned by Sites on 15 October 2026: https://loyalty-for-all-community.sammielee.chatgpt.site
+- Contact published on the company website: https://de-omega-point.com/ → `hello@de-omega-point.com`.
+- Product logo copied unchanged from the existing app’s `public/community/assets/loyalty-4-all-logo.png`. No substitute brand mark was generated.
 
-Optional static reference check:
+The existing app uses a same-origin `/api/register` service. It does not provide cross-origin registration for this Pages site, and no payment verification service was found in the inspected repositories. This website therefore uses a transparent email hand-off rather than declaring backend registration or payment success.
 
-```bash
+## Files
+
+| Page | Purpose |
+| --- | --- |
+| `index.html` | Merchant product, benefits, local data, workflow, FAQ |
+| `pricing.html` | Existing free Community Edition and optional pilot; no paid offers |
+| `checkout.html` | Optional pilot request, review and email/copy/text-file hand-off |
+| `success.html` | Honest sent-mail guidance; never a receipt |
+| `download.html` | Existing web app, conditional install guidance, native release status |
+| `privacy.html` | Website/email/app data distinctions and legacy-prototype cleanup |
+| `admin.html` | Retired prototype notice; no customer data or management actions |
+
+## Validate
+
+Node.js 22; no dependencies or build step:
+
+```sh
 npm run check
 ```
 
-## Deploy to GitHub Pages
+This checks local references and pilot safeguards, then runs nine tests covering validation, consent, URL encoding, review/edit/clear, email status, clipboard denial, text export, unsafe text and forged legacy access. Test data are synthetic. `scripts/check-app.mjs` checks the public app with GET requests and an invalid registration POST; it creates no registration. It does not prove successful database insertion, email delivery or native installation.
 
-1. Commit this repository to GitHub.
-2. In GitHub, open **Settings → Pages**.
-3. Under **Build and deployment**, choose **Deploy from a branch**.
-4. Select the branch containing these files and choose the repository root (`/`).
-5. Save. GitHub Pages will publish the static site.
-6. Visit the Pages URL and test: `index.html → pricing.html → checkout.html → success.html → download.html`.
+No browser automation or visual mobile QA was available in the implementation environment. Semantic HTML, labels, IDs, responsive CSS and code-level interactions were checked; actual device/browser rendering remains an acceptance check.
 
-No build step is required because the site uses static HTML, CSS and JavaScript.
+## Publish
 
-## PayPal Checkout setup
+The existing GitHub Pages pipeline builds `main` from the repository root. `.nojekyll` keeps files unchanged. Merge the checked PR to publish. The `Storefront checks` workflow validates changes and, on `main`, waits for and compares every public page/asset to the exact source bytes. It does not configure Pages or change a custom domain.
 
-1. Create a PayPal developer app in the PayPal Developer Dashboard.
-2. Replace `YOUR_PAYPAL_CLIENT_ID` in `checkout.html` with the public PayPal client ID.
-3. Update `assets/js/config.js` with your real PayPal client ID and plan/order identifiers.
-4. For production, do **not** trust browser-side payment status. Add a backend that:
-   - creates PayPal Orders API orders or subscription plans;
-   - captures payments server-side;
-   - verifies amount, currency, payer email and order/subscription ID;
-   - handles PayPal webhooks for completed, activated, cancelled and failed payment events;
-   - checks subscription status before download reissue.
+Expected project URL: https://de-omega-point.github.io/L4A_Landing/
 
-The current `Demo confirm payment` button exists only so the static prototype can be tested without live PayPal credentials.
+If checks cannot reach it or a deployment fails, inspect the Pages build; do not treat a merge as proof of a working public site. No Sites project or existing app was modified by this change.
 
-## Google Drive storage notes
+## Privacy and local-first boundaries
 
-Release files can remain in Google Drive, but permanent public file links should not be placed in frontend HTML or JavaScript.
+- No analytics, external SDKs, payment processors or background form requests.
+- No form personal information stored in localStorage/sessionStorage or placed in this site’s URLs.
+- User-triggered mailto, clipboard and file actions contain the reviewed request. Email delivery is controlled by the visitor and email providers.
+- Browser form restoration may retain details. “Clear this request” resets form/review data; copies in email/clipboard/files remain the visitor’s responsibility.
+- Optional updates are unchecked and independent of requesting the pilot. Receiving a request does not automatically enrol it in a service.
+- CSP blocks background connections, external scripts and native form submission. Without JavaScript, form fields are disabled and a direct email fallback is visible.
+- Only the two old prototype keys can be explicitly deleted; no `localStorage.clear()` or app customer-record access.
+- The app has separate business registration and local customer storage. Product IDs are not paid entitlements. Backups remain essential.
 
-Recommended production flow:
+## Gates before paid launch
 
-1. Store release packages in a private Google Drive folder.
-2. Store file IDs in backend configuration, not in public frontend code.
-3. After PayPal access verification, a backend creates a short-lived or otherwise controlled download handoff.
-4. Log each download reissue against the customer email, plan, serial number, app version and timestamp.
+1. **Founder approval:** confirm prices, currency, billing period, offer inclusions, refund/cancellation terms and tax treatment. No prices or live payment settings have been activated.
+2. **Trusted backend:** create/capture orders server-side from an approved catalogue; verify PayPal status, merchant/payee, amount, currency and order identity; authenticate webhooks, handle retries idempotently, and reconcile cancellations/refunds. Store secrets in backend secret storage only.
+3. **Identity and entitlements:** authenticate buyers, verify contact ownership, store entitlements durably, protect operator access and authorise every protected download server-side. A browser record or serial alone is never proof of access.
+4. **Release:** publish signed/tested packages or verified store links; keep paid files private and use short-lived authorised links. An unsigned AAB build artifact is not a customer-installable APK.
+5. **Validation:** sandbox purchase → entitlement → authorised download → expiry/cancellation/refund; reject forged/replayed events, mismatched amounts and unauthorised users. Obtain approval before any live payment activation.
 
-`assets/js/config.js` contains placeholder file IDs so the future integration points are easy to find.
-
-## Google Apps Script backend notes
-
-A lean next step is a Google Apps Script Web App backed by Google Sheets.
-
-Suggested sheet columns:
-
-- `id`
-- `createdAt`
-- `updatedAt`
-- `email`
-- `planKey`
-- `planLabel`
-- `amount`
-- `billing`
-- `paymentStatus`
-- `accessStatus`
-- `serialNumber`
-- `appVersion`
-- `paypalOrderId`
-- `lastDownloadIssuedAt`
-
-Suggested endpoints:
-
-- `POST /orders/start` — create a pending order and serial number.
-- `POST /paypal/webhook` — receive PayPal webhook events and update payment/access status.
-- `POST /downloads/reissue` — verify active access and issue a controlled Google Drive download handoff.
-- `GET /admin/orders` — return order rows for the admin dashboard.
-
-Keep PayPal secrets and Google Drive credentials inside Apps Script properties or a proper backend secret store. Never expose them in GitHub Pages frontend code.
-
-## Serial number format
-
-Serials are generated in `assets/js/core.js` using:
-
-```text
-L4A-[PLAN]-[YEAR]-[RANDOM6]
-```
-
-Examples:
-
-```text
-L4A-DRIVER-2026-7K9Q2M
-L4A-RESTO-2026-M4X8PZ
-```
-
-## Current production watchouts
-
-- Browser `localStorage` is not a secure source of truth.
-- Static PayPal capture is not authoritative.
-- Download links must be generated by a backend after verification.
-- Admin access is not authenticated in the static prototype.
+A future hosted pilot form should add a narrowly scoped registration API with server validation, rate limiting/abuse controls, explicit consent records, retention/deletion handling and truthful delivery states. Connect an actual mailing service only after it is configured and tested.

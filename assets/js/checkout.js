@@ -1,63 +1,78 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const planKey = window.L4A.getQueryParam('plan') || 'driver';
-  const plan = window.L4A.getPlan(planKey);
-  const selectedPlan = document.querySelector('[data-selected-plan]');
-  const selectedPrice = document.querySelector('[data-selected-price]');
-  const form = document.querySelector('[data-checkout-form]');
-  const paypalBox = document.querySelector('[data-paypal-box]');
-  const fallbackButton = document.querySelector('[data-demo-pay]');
+(function () {
+  'use strict';
+  const form = document.querySelector('[data-registration-form]');
+  if (!form) return;
+  const fields = document.querySelector('[data-registration-fields]');
+  const review = document.querySelector('[data-request-review]');
+  const message = document.querySelector('[data-form-message]');
+  const preview = document.querySelector('[data-request-text]');
+  const compose = document.querySelector('[data-compose-email]');
+  const copyStatus = document.querySelector('[data-copy-status]');
+  let requestText = '';
+  fields.disabled = false;
+  form.setAttribute('aria-describedby', 'form-help');
+  message.textContent = 'Nothing is sent automatically. Review your request before opening your email app.';
 
-  if (selectedPlan) selectedPlan.textContent = plan.label;
-  if (selectedPrice) selectedPrice.textContent = `$${plan.price} AUD / ${plan.billing === 'once' ? 'one time' : plan.billing}`;
-
-  const renderPayPalButtons = order => {
-    if (!window.paypal || !paypalBox) return false;
-    paypalBox.innerHTML = '';
-    window.paypal.Buttons({
-      style: { layout: 'vertical', shape: 'pill', label: 'paypal' },
-      createOrder: (data, actions) => {
-        // TODO: Replace this frontend demo order with a backend-created PayPal Orders API order.
-        return actions.order.create({
-          purchase_units: [{
-            description: `${window.L4A_CONFIG.appName} ${plan.label}`,
-            amount: { currency_code: window.L4A_CONFIG.currency, value: String(plan.price) }
-          }]
-        });
-      },
-      onApprove: async (data, actions) => {
-        // TODO: Capture and verify payment on the backend. This static capture is a prototype only.
-        await actions.order.capture();
-        const confirmed = await window.L4A.confirmPaymentWithBackend({ ...order, paypalOrderId: data.orderID });
-        window.location.href = `success.html?order=${encodeURIComponent(confirmed.id)}`;
-      },
-      onError: error => {
-        paypalBox.insertAdjacentHTML('beforeend', `<p class="notice">PayPal could not complete the payment. Please try again or contact support.</p>`);
-        console.error(error);
-      }
-    }).render(paypalBox);
-    return true;
-  };
-
-  form?.addEventListener('submit', event => {
+  function clearReview() {
+    requestText = '';
+    preview.textContent = '';
+    compose.removeAttribute('href');
+    copyStatus.textContent = '';
+    review.hidden = true;
+    form.hidden = false;
+  }
+  form.addEventListener('submit', event => {
     event.preventDefault();
-    const data = new FormData(form);
-    const email = String(data.get('email') || '').trim().toLowerCase();
-    if (!email || !email.includes('@')) {
-      form.querySelector('[data-form-message]').textContent = 'Please enter a valid email address.';
-      return;
+    if (!form.reportValidity()) return;
+    const input = new FormData(form);
+    const data = window.L4A.normaliseRequest({
+      businessName: input.get('businessName'), email: input.get('email'),
+      contactName: input.get('contactName'), businessType: input.get('businessType'),
+      privacyAccepted: input.get('privacyAccepted') === 'on',
+      updatesConsent: input.get('updatesConsent') === 'on'
+    });
+    const error = window.L4A.validateRequest(data);
+    if (error) { message.textContent = error; return; }
+    requestText = window.L4A.buildRequestText(data, window.L4A_CONFIG.privacyVersion);
+    preview.textContent = requestText;
+    compose.href = window.L4A.buildMailto(window.L4A_CONFIG.supportEmail, requestText);
+    form.hidden = true;
+    review.hidden = false;
+    document.getElementById('review-title').focus();
+  });
+  compose.addEventListener('click', () => {
+    copyStatus.textContent = 'Your email app may open. Review the message and press Send there. This website cannot verify delivery.';
+  });
+  document.querySelector('[data-edit-request]').addEventListener('click', () => {
+    clearReview();
+    document.getElementById('businessName').focus();
+  });
+  document.querySelector('[data-clear-request]').addEventListener('click', () => {
+    form.reset();
+    clearReview();
+    message.textContent = 'Request cleared from this page. Any copies in email, clipboard or files must be removed separately.';
+    document.getElementById('businessName').focus();
+  });
+  document.querySelector('[data-copy-request]').addEventListener('click', async () => {
+    if (!requestText) return;
+    try {
+      await navigator.clipboard.writeText(requestText);
+      copyStatus.textContent = 'Copied. Paste into an email to ' + window.L4A_CONFIG.supportEmail + ' and send it yourself.';
+    } catch {
+      copyStatus.textContent = 'Clipboard access is unavailable. Select and copy the request text above, or save it as a text file.';
     }
-    const order = window.L4A.saveOrder(window.L4A.createOrder({ email, planKey }));
-    form.querySelector('[data-form-message]').textContent = 'Order started. Use PayPal below to confirm access.';
-    paypalBox?.classList.remove('hidden');
-    fallbackButton?.classList.remove('hidden');
-    fallbackButton.dataset.orderId = order.id;
-    renderPayPalButtons(order);
   });
-
-  fallbackButton?.addEventListener('click', async () => {
-    const order = window.L4A.findOrder(fallbackButton.dataset.orderId);
-    if (!order) return;
-    const confirmed = await window.L4A.confirmPaymentWithBackend(order);
-    window.location.href = `success.html?order=${encodeURIComponent(confirmed.id)}`;
+  document.querySelector('[data-save-request]').addEventListener('click', () => {
+    if (!requestText) return;
+    const blob = new Blob([requestText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'loyalty-4-all-pilot-request.txt';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    copyStatus.textContent = 'A text-file download was requested. This does not submit your registration.';
   });
-});
+})();
