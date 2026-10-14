@@ -1,0 +1,45 @@
+name: Storefront checks
+on:
+  push:
+    branches: [main, codex/build-mobile-first-landing-page-and-access-system]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: storefront-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run check
+      - name: JavaScript syntax
+        run: |
+          for file in assets/js/*.js scripts/*.mjs tests/*.mjs; do node --check "$file"; done
+      - run: git diff --check
+  existing-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe the existing public app without creating a registration
+        run: node scripts/check-app.mjs
+  published:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify public Pages files match this source revision
+        run: node scripts/check-published.mjs
