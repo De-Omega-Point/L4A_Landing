@@ -46,7 +46,7 @@ test('legacy removal touches only the two old prototype keys', () => {
   assert.deepEqual(deleted,['l4a_orders','l4a_current_order']);
 });
 // Execute the production scripts against a small DOM harness. No backend or email is contacted.
-function journey({clipboardFails=false, data=valid}={}) {
+function journey({clipboardFails=false, clipboardWrite, data=valid}={}) {
   const nodes=new Map();
   function element(key) {
     if (!nodes.has(key)) nodes.set(key,{hidden:key==='[data-request-review]',disabled:false,textContent:'',attributes:{},events:{},focus(){this.focused=true;},setAttribute(k,v){this.attributes[k]=v;},removeAttribute(k){delete this.attributes[k];delete this[k];},addEventListener(k,fn){this.events[k]=fn;},async fire(event='click'){return await this.events[event]?.({preventDefault(){}});}});
@@ -59,7 +59,7 @@ function journey({clipboardFails=false, data=valid}={}) {
   const copies=[],files=[],revoked=[],timers=[];
   const FakeURL={createObjectURL:blob=>{files.push(blob);return 'blob:test';},revokeObjectURL:url=>revoked.push(url)};
   const window={location:{search:'?order=forged&plan=driver&paid=true'},get localStorage(){throw new Error('storage blocked');}};
-  const context=vm.createContext({window,document:{querySelector:element,getElementById:element,body:{append(){}},createElement(){return {click(){},remove(){}};}},FormData:class {get(name){return typeof values[name]==='boolean'?(values[name]?'on':null):(values[name]??null);}},navigator:{clipboard:{writeText:async text=>{if(clipboardFails) throw Error('denied');copies.push(text);}}},Blob,URL:FakeURL,setTimeout:fn=>timers.push(fn)});
+  const context=vm.createContext({window,document:{querySelector:element,getElementById:element,body:{append(){}},createElement(){return {click(){},remove(){}};}},FormData:class {get(name){return typeof values[name]==='boolean'?(values[name]?'on':null):(values[name]??null);}},navigator:{clipboard:{writeText:async text=>{if(clipboardFails) throw Error('denied');if(clipboardWrite) await clipboardWrite(text);copies.push(text);}}},Blob,URL:FakeURL,setTimeout:fn=>timers.push(fn)});
   vm.runInContext(configSource,context);
   vm.runInContext(coreSource,context);
   vm.runInContext(checkoutSource,context);
@@ -127,4 +127,58 @@ test('legacy URLs and storage cannot turn status pages into proof of access', ()
   assert.match(form,/<fieldset disabled/);
   assert.match(form,/<noscript>/);
   assert.doesNotMatch(form,/name="updatesConsent"[^>]*checked/);
+});
+
+function deferred() {
+  let resolve, reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+for (const action of ['clear-request', 'edit-request']) {
+  for (const outcome of ['resolve', 'reject']) {
+    test(`a delayed clipboard ${outcome} cannot overwrite a newer request after ${action}`, async () => {
+      const operation = deferred();
+      const j = journey({ clipboardWrite: () => operation.promise });
+      await j.form.fire('submit');
+      const copying = j.element('[data-copy-request]').fire();
+      await j.element(`[data-${action}]`).fire();
+      j.setValues({ ...valid, businessName: 'A different request' });
+      await j.form.fire('submit');
+      operation[outcome](new Error('clipboard denied'));
+      await copying;
+      assert.equal(j.element('[data-copy-status]').textContent, '');
+      assert.match(j.element('[data-request-text]').textContent, /A different request/);
+    });
+  }
+}
+test('only the newest clipboard action may update the status', async () => {
+  const first = deferred();
+  let call = 0;
+  const j = journey({ clipboardWrite: () => ++call === 1 ? first.promise : Promise.resolve() });
+  await j.form.fire('submit');
+  const stale = j.element('[data-copy-request]').fire();
+  await j.element('[data-copy-request]').fire();
+  first.reject(new Error('older clipboard denial'));
+  await stale;
+  assert.match(j.element('[data-copy-status]').textContent, /^Copied\./);
+});
+for (const action of ['compose-email', 'save-request']) {
+  test(`pending clipboard status cannot replace a newer ${action} result`, async () => {
+    const operation = deferred();
+    const j = journey({ clipboardWrite: () => operation.promise });
+    await j.form.fire('submit');
+    const copying = j.element('[data-copy-request]').fire();
+    await j.element(`[data-${action}]`).fire();
+    const latestStatus = j.element('[data-copy-status]').textContent;
+    operation.resolve();
+    await copying;
+    assert.equal(j.element('[data-copy-status]').textContent, latestStatus);
+  });
+}
+test('blocked browser storage gives a helpful legacy-cleanup message without breaking the form', async () => {
+  const j = journey();
+  await j.element('[data-clear-legacy]').fire();
+  assert.match(j.element('[data-legacy-status]').textContent, /Browser storage is unavailable/);
+  await j.form.fire('submit');
+  assert.equal(j.element('[data-request-review]').hidden, false);
 });

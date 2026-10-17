@@ -9,11 +9,13 @@
   const compose = document.querySelector('[data-compose-email]');
   const copyStatus = document.querySelector('[data-copy-status]');
   let requestText = '';
+  let statusRevision = 0;
   fields.disabled = false;
   form.setAttribute('aria-describedby', 'form-help');
   message.textContent = 'Nothing is sent automatically. Review your request before opening your email app.';
 
   function clearReview() {
+    statusRevision++;
     requestText = '';
     preview.textContent = '';
     compose.removeAttribute('href');
@@ -33,6 +35,8 @@
     });
     const error = window.L4A.validateRequest(data);
     if (error) { message.textContent = error; return; }
+    statusRevision++;
+    copyStatus.textContent = '';
     requestText = window.L4A.buildRequestText(data, window.L4A_CONFIG.privacyVersion);
     preview.textContent = requestText;
     compose.href = window.L4A.buildMailto(window.L4A_CONFIG.supportEmail, requestText);
@@ -41,6 +45,7 @@
     document.getElementById('review-title').focus();
   });
   compose.addEventListener('click', () => {
+    statusRevision++;
     copyStatus.textContent = 'Your email app may open. Review the message and press Send there. This website cannot verify delivery.';
   });
   document.querySelector('[data-edit-request]').addEventListener('click', () => {
@@ -55,15 +60,20 @@
   });
   document.querySelector('[data-copy-request]').addEventListener('click', async () => {
     if (!requestText) return;
+    const revision = ++statusRevision;
     try {
       await navigator.clipboard.writeText(requestText);
+      // A delayed clipboard result must not describe a newer request or action.
+      if (revision !== statusRevision) return;
       copyStatus.textContent = 'Copied. Paste into an email to ' + window.L4A_CONFIG.supportEmail + ' and send it yourself.';
     } catch {
+      if (revision !== statusRevision) return;
       copyStatus.textContent = 'Clipboard access is unavailable. Select and copy the request text above, or save it as a text file.';
     }
   });
   document.querySelector('[data-save-request]').addEventListener('click', () => {
     if (!requestText) return;
+    statusRevision++;
     const blob = new Blob([requestText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

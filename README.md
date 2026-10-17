@@ -40,13 +40,13 @@ Node.js 22; no dependencies or build step:
 npm run check
 ```
 
-This checks local references and pilot safeguards, then runs nine tests covering validation, consent, URL encoding, review/edit/clear, email status, clipboard denial, text export, unsafe text and forged legacy access. Test data are synthetic. `scripts/check-app.mjs` checks the public app with GET requests and an invalid membership POST and a forbidden cross-origin POST; it creates no registration. It does not prove successful database insertion, email delivery or native installation.
+This checks local references and pilot safeguards, then runs the offline regression suite covering validation, consent, URL encoding, review/edit/clear, email status, interrupted/repeated clipboard actions, clipboard denial, blocked storage, text export, unsafe text and forged legacy access. Release-check tests simulate asset-only updates, mixed revisions, HTTP/network/body failures, delayed requests and deadline expiry without contacting the public site. Test data are synthetic. `scripts/check-app.mjs` checks the public app with GET requests and an invalid membership POST and a forbidden cross-origin POST; it creates no registration. It does not prove successful database insertion, email delivery or native installation.
 
-No browser automation or visual mobile QA was available in the implementation environment. Semantic HTML, labels, IDs, responsive CSS and code-level interactions were checked; actual device/browser rendering remains an acceptance check.
+Interactive browser and visual mobile QA remain unverified. The 17 October 2026 local attempt could not launch installed Chromium because the execution environment blocked its process/socket setup. Semantic HTML, labels, IDs, responsive CSS and code-level interactions were checked; actual device/browser rendering remains an acceptance check. The local release-hardening checks ran on Node.js 24.19.0; GitHub CI remains the Node.js 22 verification gate.
 
 ## Publish
 
-The existing GitHub Pages pipeline builds `main` from the repository root. `.nojekyll` keeps files unchanged. Merge the checked PR to publish. The `Storefront checks` workflow validates changes and, on `main`, waits for and compares every public page/asset to the exact source bytes. It does not configure Pages or change a custom domain.
+The existing GitHub Pages pipeline builds `main` from the repository root. `.nojekyll` keeps files unchanged. Merge the checked PR to publish. The `Storefront checks` workflow validates changes and, on `main`, waits for and compares every public page/asset to the exact source bytes. Its cache key includes the sorted paths and hashes of the complete release, not just `index.html`. All files must match in one polling pass; stale files, HTTP failures and interrupted requests are retried. Requests (including their response bodies) have a 15-second limit capped by a shared 10-minute deadline, leaving headroom in the 12-minute workflow job. Timeout errors identify the last mismatching or unavailable files. It does not configure Pages or change a custom domain.
 
 Expected project URL: https://de-omega-point.github.io/L4A_Landing/
 
