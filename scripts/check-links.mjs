@@ -31,4 +31,4 @@ for (const file of readdirSync('assets/js')) {
   assert.doesNotMatch(source, /confirmPaymentWithBackend|saveOrder|seedDemoOrders|generateSerialNumber|paypal\.Buttons|innerHTML|insertAdjacentHTML/, file + ': unsafe legacy code');
   assert.doesNotMatch(source, /localStorage\.setItem|sessionStorage|fetch\s*\(/, file + ': no personal-data persistence or background requests');
 }
-console.log(`Checked ${pages.length} pages and ${references} local references; merchant pilot safeguards passed.`);
+console.log(`Checked ${pages.length} pages and ${references} local references; local-first storefront safeguards passed.`);

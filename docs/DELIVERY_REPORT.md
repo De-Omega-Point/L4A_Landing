@@ -1,35 +1,42 @@
 # Loyalty-4-All storefront delivery report
 
-Date: 15 October 2026 (Australia/Adelaide)
+Updated: 17 October 2026 (UTC)
 Repository: https://github.com/De-Omega-Point/L4A_Landing
-Existing work: https://github.com/De-Omega-Point/L4A_Landing/pull/1
+Original storefront implementation: https://github.com/De-Omega-Point/L4A_Landing/pull/1
+Draft release-hardening work: https://github.com/De-Omega-Point/L4A_Landing/pull/2
 
 ## Outcome
 
-The existing seven-page prototype is now a merchant product website and optional email pilot channel. The original page structure, styles/components, repository and PR are reused. Product positioning is customer loyalty for independent businesses. The existing product logo is preserved unchanged.
+The storefront now prioritises adoption and familiarity, rather than a pilot sign-up. The original seven-page structure, official product logo and visual components are preserved.
 
-Visitors can explore the product, understand local data trade-offs, reach the existing Community Edition, use its optional Insights → Join free registration and prepare a separate pilot request. Requests can be reviewed, edited, copied, saved as text, cleared or opened in an email app. The website never declares that it received the request; the visitor must send it.
+The main journey is: understand the benefit → see how it works → open free Community Edition directly → set up a reward → use it with customers. The primary app button consistently says **Start using Loyalty4All**. The secondary action is **See how it works**. Navigation no longer promotes pilot participation or registration.
 
-## Removed
+Community Intelligence updates remain separate and optional through the existing app’s Insights → Join free flow. This storefront-repository change does not modify an app feature or registration service; any separately reviewed app-source change is outside this report. A secondary invitation on the website asks for feedback after use; it does not claim a new in-app feedback feature.
 
-Driver/Restaurant/private-beta price offers; PayPal SDK and demo confirmation; fake payment verification; locally issued access serials; browser-based entitlements; placeholder secure-download buttons; public order administration and sample-order generation. Legacy checkout/status/download URLs cannot recreate those behaviours.
+The old `checkout.html` address remains available as feedback and support, not a checkout or sign-up. Its email composer requires only a message and privacy acknowledgement. Business name, preferred reply email and name are optional. It has no marketing subscription field. Visitors can review, edit, copy, save, clear or open the message in an email app, then choose whether to send it. Nothing is submitted automatically, and a prepared message is not proof of receipt.
 
-## Infrastructure decision
+## Preserved safeguards
 
-The inspected configuration had placeholder payment credentials and no payment/entitlement backend. The current live app (Sites version 13, source commit `6d54e07c4183a9fc6ceb1252ac5b215e27bbd127`) works without compulsory registration and has optional Community Intelligence membership via `/api/community-members`. The service rejects cross-origin requests, so registration is routed through its existing app form. The native GitHub repository is behind this published version; landing-page copy was corrected against the live source. No new paid infrastructure, credentials, mailing service, native download, price or subscription has been activated.
+- Core loyalty use needs no compulsory account or registration. App links go directly to the existing Community Edition URL.
+- Local customer data, backup responsibilities and the absence of automatic multi-device synchronisation remain explicit.
+- Online payments, paid entitlements and native/store downloads remain unavailable. Legacy checkout/status/download URLs cannot recreate retired payment or access behaviours.
+- CSP still blocks background connections and native form submission. No personal data is stored by the composer in localStorage/sessionStorage or added to this site’s URLs.
+- No-JavaScript visitors retain a direct email fallback. Copies in email, clipboard or downloaded files remain under the visitor’s control.
+- Delayed clipboard results cannot overwrite a newer edit, clear, copy, email or save action.
+- The release check hashes the full page/asset manifest and retries until every file matches in one pass. Request/body timeouts and an overall deadline remain intact.
 
-The pilot form uses the official contact address published at https://de-omega-point.com/. The email hand-off is deliberately manual; no mailbox delivery or automatic lead capture is claimed.
+## Validation of this revision
 
-## Validation
+- `npm run check`: 36 passing tests, seven HTML pages and 114 local references.
+- Regression coverage checks direct app CTAs, secondary how-it-works links, adoption-focused navigation, optional contact details, required feedback/privacy acknowledgement, email encoding, no implicit subscription, review/edit/clear, blocked storage, text export, unsafe text, forged legacy access and interrupted/repeated clipboard actions.
+- Existing full-release readiness tests remain unchanged and cover asset-only releases, mixed revisions, transient errors, delayed headers/bodies and deadline expiry.
+- JavaScript syntax, HTML IDs/labels/landmarks and Git whitespace checks pass on this local revision.
+- Local tests use Node.js 24.19.0. Node.js 22 remains a matching-commit CI gate.
+- Interactive browser/mobile rendering, actual device installation, mailbox delivery and valid app registration/database persistence are not verified. Earlier Chromium attempts were blocked by the execution environment; no visual pass is claimed.
+- No live form submission, email, app change, publication or deployment was performed as part of this storefront-repository change. Existing-app HTTP probes are distinct from browser QA and are not evidence of successful user registration or receipt of feedback.
 
-- Seven HTML pages parsed; unique IDs, input labels, main landmarks and skip links checked.
-- 110 local asset/page references pass the link/fragment check.
-- Nine automated request/security/state tests pass locally.
-- JavaScript syntax and Git whitespace checks are required before commit.
-- Responsive layout, touch target sizes, focus styling, readable text, persistent mobile navigation and reduced-motion support are implemented.
-- Browser rendering, real-device installation, valid registration/database persistence and email delivery have not been tested. Browser-control capability was unavailable; external HTTP probes from the local environment were blocked by its network proxy.
-- GitHub CI includes an independent existing-app probe (GETs, an invalid membership POST and a forbidden cross-origin POST, no record creation) and public Pages byte-for-byte verification after publication. Results must be read from the matching commit’s workflow, not inferred from local tests.
+## Release and commercial gates
 
-## Commercial next gate
+Keep the draft unmerged until founder review and matching-commit checks are complete. GitHub Pages publication follows a merge to `main`, not creation of a draft.
 
-Use a small merchant pilot to test repeat visits, reward use, operator effort and willingness to pay. Confirm the pilot mailbox is monitored and can receive messages before acquisition campaigns. Keep paid launch gated on founder-approved prices/terms, a trusted payment and entitlement backend, authenticated operators and approved downloadable releases. See README for the concrete launch gates.
+Before acquisition campaigns, confirm the support mailbox is monitored and can receive messages. Paid launch remains gated on founder-approved prices/terms, a trusted payment and entitlement backend, authenticated operators and approved downloadable releases. See README for the concrete gates. None of those services is activated by this storefront change.

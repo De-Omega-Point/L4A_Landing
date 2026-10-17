@@ -1,9 +1,9 @@
 // Public website configuration. Never put secrets or private release URLs here.
 window.L4A_CONFIG = Object.freeze({
   appName: 'Loyalty-4-All',
-  mode: 'merchant-pilot',
+  mode: 'community-adoption',
   paymentsEnabled: false,
   supportEmail: 'hello@de-omega-point.com',
   webAppUrl: 'https://loyalty-for-all-community.sammielee.chatgpt.site/community/',
-  privacyVersion: '2026-10-15'
+  privacyVersion: '2026-10-17'
 });
