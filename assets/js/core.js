@@ -1,42 +1,39 @@
 (function (root) {
   'use strict';
-  const businessTypes = ['', 'Café or food business', 'Retail', 'Hair or beauty', 'Health or fitness', 'Professional service', 'Other'];
   function normaliseRequest(input) {
     const clean = value => String(value ?? '').trim().replace(/[\r\n\t]+/g, ' ');
     return {
+      message: String(input.message ?? '').replace(/\r\n?/g, '\n').trim(),
       businessName: clean(input.businessName),
       email: clean(input.email).toLowerCase(),
       contactName: clean(input.contactName),
-      businessType: clean(input.businessType),
-      privacyAccepted: input.privacyAccepted === true,
-      updatesConsent: input.updatesConsent === true
+      privacyAccepted: input.privacyAccepted === true
     };
   }
   function validateRequest(data) {
-    if (!data.businessName || data.businessName.length > 120) return 'Enter a business name of up to 120 characters.';
-    if (data.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return 'Enter a valid contact email address.';
+    if (!data.message || data.message.length > 2000) return 'Enter a message of up to 2,000 characters.';
+    if (data.businessName.length > 120) return 'Keep your business name to 120 characters or fewer.';
+    if (data.email && (data.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))) return 'Enter a valid contact email address.';
     if (data.contactName.length > 120) return 'Keep your name to 120 characters or fewer.';
-    if (!businessTypes.includes(data.businessType)) return 'Choose a business type from the list.';
     if (!data.privacyAccepted) return 'Please read and acknowledge the privacy notice.';
     return '';
   }
   function buildRequestText(data, privacyVersion) {
     return [
       'Hello De-Omega-Point,', '',
-      'I would like to register interest in the Loyalty-4-All merchant pilot.', '',
-      `Business: ${data.businessName}`,
-      `Contact email: ${data.email}`,
+      'I have feedback or a support question about Loyalty-4-All.', '',
+      data.message, '',
+      `Business: ${data.businessName || 'Not provided'}`,
+      `Preferred reply email: ${data.email || 'Use my sending address'}`,
       `Contact name: ${data.contactName || 'Not provided'}`,
-      `Business type: ${data.businessType || 'Not provided'}`, '',
-      'Please reply about this pilot request.',
-      `Optional product / AI marketing / industry updates: ${data.updatesConsent ? 'YES, I opt in. I can ask to stop at any time.' : 'NO, I have not opted in.'}`,
+      '', 'Sending this message does not subscribe me to updates.',
       `Privacy notice acknowledged: ${privacyVersion}`, '',
-      'This is an interest request, not a purchase or an app-access confirmation.'
+      'This is feedback or a support request, not a purchase, registration or app-access confirmation.'
     ].join('\n');
   }
   function buildMailto(recipient, body) {
     if (!/^[^\s@?&#]+@[^\s@?&#]+\.[^\s@?&#]+$/.test(recipient)) throw new Error('Invalid contact address.');
-    return `mailto:${recipient}?subject=${encodeURIComponent('Loyalty-4-All merchant pilot interest')}&body=${encodeURIComponent(body)}`;
+    return `mailto:${recipient}?subject=${encodeURIComponent('Loyalty-4-All feedback and support')}&body=${encodeURIComponent(body)}`;
   }
   function forgetLegacyData(storage) {
     // Never call clear(): this origin may host other products.
