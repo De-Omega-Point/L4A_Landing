@@ -1,12 +1,12 @@
 # Loyalty-4-All merchant website
 
-A mobile-friendly product website for **Loyalty-4-All Community Edition**, reusing the seven-page static implementation from PR #1. It explains the merchant loyalty product and makes starting with the free app the primary journey. Optional feedback and support use a visitor-controlled email hand-off after use. Online payments and paid entitlements are unavailable.
+A mobile-friendly product website for **Loyalty-4-All Community Edition**, reusing the seven-page static implementation from PR #1. It explains the merchant loyalty product and makes landing page → free registration → browser installation or use the primary journey. Optional feedback and support use a visitor-controlled email hand-off after use. Online payments and paid entitlements are unavailable.
 
 ## Customer journeys
 
-- **Start using it:** Understand the benefit → See how it works → open Community Edition directly with **Start using Loyalty4All** → set up a reward → use it with customers. Core loyalty tools need no account or registration.
+- **Start using it:** Understand the benefit on this landing page → **Start using Loyalty4All** → register on the existing app host at `/register` → install through the browser if offered, or open the app → set up a reward → use it with customers. Registration is required and free; no password or payment is requested.
 - **Optional feedback/support:** After use, share what worked or ask for help → message + privacy acknowledgement → review → compose email / copy / save text → visitor sends via their email provider. Business name, preferred reply email and name are optional; the sending email address is shared by the visitor’s email service.
-- **Optional updates:** Community Intelligence registration remains separate in the app’s **Insights → Join free** flow. Feedback does not register anyone or subscribe them to updates.
+- **Optional updates:** App registration has a separate, unchecked marketing opt-in. It is not required for app use. Feedback does not register anyone or subscribe them to updates.
 - **No JavaScript / no mail app:** a direct contact address is provided; copy into webmail or use the text-file fallback.
 - **Old links:** `checkout.html?plan=driver` opens feedback and support without restoring checkout or signup. `success.html?order=anything` cannot confirm a payment or registration. `download.html` ignores browser order records and does not grant paid access. `admin.html` is a non-functional retirement notice, with no order table or activation controls.
 
@@ -19,7 +19,9 @@ A prepared email is **not a received message**. There is no automated acknowledg
 - Contact published on the company website: https://de-omega-point.com/ → `hello@de-omega-point.com`.
 - Product logo copied unchanged from the existing app’s `public/community/assets/loyalty-4-all-logo.png`. No substitute brand mark was generated.
 
-The app source inspected on 15 October used a same-origin `/api/community-members` service and explicitly rejected cross-origin submissions. No cross-origin registration for this Pages site or payment verification service was found in that inspection. This storefront change introduces neither service. This website routes optional Community Intelligence registration to the app’s existing Insights flow and uses a transparent email hand-off for optional feedback and support. It never declares backend registration or payment success.
+The coordinated app candidate reviewed locally on 18 October uses `/register` and a same-origin `/api/registrations` service with private database persistence and a secure browser receipt cookie. The server-issued UUID Product ID is a reference, not a password or verified identity. Registration contact details are separate from local customer records; marketing consent is optional. The old on-device Product ID is now described as a local workspace ID. This product website introduces no registration service and collects no registrations itself: every Start button routes to the app host. Feedback remains a transparent email hand-off. Neither the feedback nor status pages declare registration or payment success.
+
+**Release dependency:** Deploy and verify the registration-first app before publishing this storefront candidate. The local app contract is not evidence of a working live backend. Do not publish these registration requirements while the app still exposes the old optional-registration flow.
 
 ## Files
 
@@ -29,7 +31,7 @@ The app source inspected on 15 October used a same-origin `/api/community-member
 | `pricing.html` | Free Community Edition, local-data limits and separate optional updates; no paid offers |
 | `checkout.html` | Optional feedback/support message, review and email/copy/text-file hand-off; legacy URL retained |
 | `success.html` | Honest sent-mail guidance; never a receipt |
-| `download.html` | Existing web app, conditional install guidance, native release status |
+| `download.html` | Registration first, conditional browser install guidance, paused native release status |
 | `privacy.html` | Website/email/app data distinctions and legacy-prototype cleanup |
 | `admin.html` | Retired prototype notice; no customer data or management actions |
 
@@ -41,7 +43,7 @@ Node.js 22; no dependencies or build step:
 npm run check
 ```
 
-This checks local references and local-first safeguards, then runs the offline regression suite covering adoption CTAs/navigation, optional contact details, feedback validation, privacy acknowledgement, URL encoding, review/edit/clear, email status, interrupted/repeated clipboard actions, clipboard denial, blocked storage, text export, unsafe text and forged legacy access. Release-check tests simulate asset-only updates, mixed revisions, HTTP/network/body failures, delayed requests and deadline expiry without contacting the public site. Test data are synthetic. `scripts/check-app.mjs` checks the public app with GET requests and an invalid membership POST and a forbidden cross-origin POST; it creates no registration. It does not prove successful database insertion, email delivery or native installation.
+This checks local references and local-first safeguards, then runs the offline regression suite covering registration-first CTAs/navigation, no bypass entry links, optional marketing, optional feedback contact details, feedback validation, privacy acknowledgement, URL encoding, review/edit/clear, email status, interrupted/repeated clipboard actions, clipboard denial, blocked storage, text export, unsafe text and forged legacy access. Release-check tests simulate asset-only updates, mixed revisions, HTTP/network/body failures, delayed requests and deadline expiry without contacting the public site. Test data are synthetic. `scripts/check-app.mjs` is a post-app-deployment probe for `/register`, required registration fields, optional/unchecked marketing, public legal/brand assets, gated app navigation/assets, registration-service readiness and secure cookie flags. Its only POST bodies are empty objects: one same-origin invalid submission and one forbidden cross-origin submission. It creates no registration and keeps its temporary cookie only in memory. Public legal/brand asset probes permit at most three manual same-origin redirects; external or credentialed targets, missing destinations and loops fail. Registration and protected app checks remain strict. Offline fixture tests reject old or bypassed app flows, mandatory/preselected marketing, unsafe redirects and unavailable registration persistence. This probe does not prove successful database insertion, email delivery or installation and has not been run against the public app for this local-only candidate.
 
 Interactive browser and visual mobile QA remain unverified. The 17 October 2026 local attempt could not launch installed Chromium because the execution environment blocked its process/socket setup. Semantic HTML, labels, IDs, responsive CSS and code-level interactions were checked; actual device/browser rendering remains an acceptance check. The local release-hardening checks ran on Node.js 24.19.0; GitHub CI remains the Node.js 22 verification gate.
 
@@ -51,7 +53,7 @@ The existing GitHub Pages pipeline builds `main` from the repository root. `.noj
 
 Expected project URL: https://de-omega-point.github.io/L4A_Landing/
 
-If checks cannot reach it or a deployment fails, inspect the Pages build; do not treat a merge as proof of a working public site. This storefront-repository change does not modify a Sites project or the existing app; separately reviewed app-source work is outside this report.
+If checks cannot reach it or a deployment fails, inspect the Pages build; do not treat a merge as proof of a working public site. This storefront-repository change does not itself modify the Sites app. The separately reviewed registration-first app must be deployed and pass the app probe before the storefront is published. Confirm the app entrypoint and receipt-gated access again after both releases.
 
 ## Privacy and local-first boundaries
 
@@ -59,10 +61,10 @@ If checks cannot reach it or a deployment fails, inspect the Pages build; do not
 - No form personal information stored in localStorage/sessionStorage or placed in this site’s URLs.
 - User-triggered mailto, clipboard and file actions contain the reviewed message. Email delivery is controlled by the visitor and email providers.
 - Browser form restoration may retain details. “Clear this message” resets form/review data; copies in email/clipboard/files remain the visitor’s responsibility.
-- The feedback composer has no marketing opt-in or registration fields. Community Intelligence updates are a separate, optional app flow. Receiving feedback does not automatically enrol anyone in a service.
+- The feedback composer has no marketing opt-in or registration fields. App registration is required before installing or using the app, with marketing consent separate and optional. Receiving feedback does not automatically enrol anyone in a service.
 - CSP blocks background connections, external scripts and native form submission. Without JavaScript, form fields are disabled and a direct email fallback is visible.
 - Only the two old prototype keys can be explicitly deleted; no `localStorage.clear()` or app customer-record access.
-- The app has optional Community Intelligence registration and local customer storage; core loyalty use needs no account. Its on-device Product IDs are not proof of identity or paid entitlements. Backups remain essential.
+- The app saves registrant contact details privately in its database and customer records locally on the device. Its server-issued Product ID is not a password, verified identity or paid entitlement. A separate local workspace ID identifies on-device data. Registration does not back up or sync local records, and a new browser or cleared cookie may require registering again. Backups remain essential.
 
 ## Gates before paid launch
 

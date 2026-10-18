@@ -1,42 +1,39 @@
-# Loyalty-4-All storefront delivery report
+# Loyalty-4-All storefront registration-first candidate
 
-Updated: 17 October 2026 (UTC)
+Updated: 18 October 2026 (UTC)
 Repository: https://github.com/De-Omega-Point/L4A_Landing
-Original storefront implementation: https://github.com/De-Omega-Point/L4A_Landing/pull/1
-Draft release-hardening work: https://github.com/De-Omega-Point/L4A_Landing/pull/2
+Base: published storefront commit `df3579f`
+Status: local-only candidate; no commit, push or publication in this task
 
 ## Outcome
 
-The storefront now prioritises adoption and familiarity, rather than a pilot sign-up. The original seven-page structure, official product logo and visual components are preserved.
+The main journey is landing page → free registration on the existing app host → optional browser installation or browser use → set up a reward and use it with customers. Every **Start using Loyalty4All** button and the public app URL configuration now points to `https://loyalty-for-all-community.sammielee.chatgpt.site/register`. **See how it works** remains the secondary action. The original seven-page structure, official logo, design and product-focused navigation are preserved, without pilot promotion.
 
-The main journey is: understand the benefit → see how it works → open free Community Edition directly → set up a reward → use it with customers. The primary app button consistently says **Start using Loyalty4All**. The secondary action is **See how it works**. Navigation no longer promotes pilot participation or registration.
+Registration is required and free, with no password or payment. Marketing consent remains a separate, optional choice. App registrant contact details are stored privately in the app service's central database, separately from customer records held in the browser. The server-issued Product ID is a reference, not a password, verified identity or proof of paid access. The old on-device Product ID is now explained as a separate local workspace ID. Registration is not a backup or a cross-device recovery service.
 
-Community Intelligence updates remain separate and optional through the existing app’s Insights → Join free flow. This storefront-repository change does not modify an app feature or registration service; any separately reviewed app-source change is outside this report. A secondary invitation on the website asks for feedback after use; it does not claim a new in-app feedback feature.
-
-The old `checkout.html` address remains available as feedback and support, not a checkout or sign-up. Its email composer requires only a message and privacy acknowledgement. Business name, preferred reply email and name are optional. It has no marketing subscription field. Visitors can review, edit, copy, save, clear or open the message in an email app, then choose whether to send it. Nothing is submitted automatically, and a prepared message is not proof of receipt.
+The product website itself does not collect registrations. The legacy `checkout.html` remains optional feedback/support, not checkout or registration. Its composer still requires only a message and privacy acknowledgement; contact details remain optional. Visitors review and choose whether to send through their email service. The status page never confirms registration, delivery or paid access.
 
 ## Preserved safeguards
 
-- Core loyalty use needs no compulsory account or registration. App links go directly to the existing Community Edition URL.
-- Local customer data, backup responsibilities and the absence of automatic multi-device synchronisation remain explicit.
-- Online payments, paid entitlements and native/store downloads remain unavailable. Legacy checkout/status/download URLs cannot recreate retired payment or access behaviours.
-- CSP still blocks background connections and native form submission. No personal data is stored by the composer in localStorage/sessionStorage or added to this site’s URLs.
-- No-JavaScript visitors retain a direct email fallback. Copies in email, clipboard or downloaded files remain under the visitor’s control.
-- Delayed clipboard results cannot overwrite a newer edit, clear, copy, email or save action.
-- The release check hashes the full page/asset manifest and retries until every file matches in one pass. Request/body timeouts and an overall deadline remain intact.
+- All public app-entry links route to `/register`; legal-notice links remain public.
+- Local customer data, backup responsibilities and absence of automatic multi-device synchronisation remain explicit.
+- Browser installation is optional after registration. Google Play, App Store, APK and ZIP releases remain paused; no native-download or verified-install claims are introduced.
+- Online payments and paid entitlements remain unavailable. Legacy URLs cannot recreate retired payment or access behaviours.
+- CSP still blocks background connections and native form submission. No feedback personal data is stored in localStorage/sessionStorage or this website's URLs.
+- Existing email, clipboard, text-file and legacy-storage safeguards remain unchanged.
+- The full-release manifest comparison, request/body timeouts and overall deadline remain intact.
 
-## Validation of this revision
+## Validation of this candidate
 
-- `npm run check`: 36 passing tests, seven HTML pages and 114 local references.
-- Regression coverage checks direct app CTAs, secondary how-it-works links, adoption-focused navigation, optional contact details, required feedback/privacy acknowledgement, email encoding, no implicit subscription, review/edit/clear, blocked storage, text export, unsafe text, forged legacy access and interrupted/repeated clipboard actions.
-- Existing full-release readiness tests remain unchanged and cover asset-only releases, mixed revisions, transient errors, delayed headers/bodies and deadline expiry.
-- JavaScript syntax, HTML IDs/labels/landmarks and Git whitespace checks pass on this local revision.
-- Local tests use Node.js 24.19.0. Node.js 22 remains a matching-commit CI gate.
-- Interactive browser/mobile rendering, actual device installation, mailbox delivery and valid app registration/database persistence are not verified. Earlier Chromium attempts were blocked by the execution environment; no visual pass is claimed.
-- No live form submission, email, app change, publication or deployment was performed as part of this storefront-repository change. Existing-app HTTP probes are distinct from browser QA and are not evidence of successful user registration or receipt of feedback.
+- `npm run check`: 47 passing tests, seven HTML pages and 114 local references.
+- Added regression coverage rejects app-entry bypass links and obsolete no-registration promises; verifies registration-first steps, separate optional marketing, Product ID/workspace ID language, private registration versus local customer data, and browser-only installation guidance.
+- Updated `scripts/check-app.mjs` for the new app contract. Offline fixture tests cover the expected public registration page, gated app navigation/assets, invalid/forbidden submissions, optional unchecked marketing, old-flow/bypass rejection and service-readiness failures. Its POST bodies contain no details or consent and cannot create a valid registration. Public legal/brand assets may follow at most three manual same-origin redirects; unsafe targets, loops and missing destinations fail. Registration and protected app checks remain strict, with redirect regression tests.
+- JavaScript syntax, HTML IDs/labels/landmarks and Git whitespace checks pass locally.
+- Interactive browser/mobile rendering, actual installation, valid production registration/database insertion and mailbox delivery were not tested in this storefront task.
+- No live app probe, form submission, email, app change, commit, push or publication was performed in this local-only task.
 
-## Release and commercial gates
+## Coordinated release gate
 
-Keep the draft unmerged until founder review and matching-commit checks are complete. GitHub Pages publication follows a merge to `main`, not creation of a draft.
+Publish and verify the separately reviewed registration-first app before publishing this storefront. The currently published app's old optional-registration behaviour is not an acceptable match for this candidate, and the updated live probe is intentionally expected to reject that old flow. Run it after app deployment, then require matching-commit CI and public storefront byte verification. A local passing test suite alone does not establish live registration persistence or successful publication.
 
-Before acquisition campaigns, confirm the support mailbox is monitored and can receive messages. Paid launch remains gated on founder-approved prices/terms, a trusted payment and entitlement backend, authenticated operators and approved downloadable releases. See README for the concrete gates. None of those services is activated by this storefront change.
+Before acquisition campaigns, confirm the support mailbox is monitored and can receive messages. Paid launch remains gated on approved prices/terms, a trusted payment and entitlement backend, authenticated operators and approved downloadable releases. None of those services is activated by this storefront change.
