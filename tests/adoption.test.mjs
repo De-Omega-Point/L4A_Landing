@@ -33,8 +33,8 @@ test('the home journey explains registration before installation and use', () =>
   const links = anchors(hero);
   assert.equal(links[0].text,'Start using Loyalty4All');
   assert.equal(links[0].href,app);
-  assert.equal(links[1].text,'See how it works');
-  assert.equal(links[1].href,'#how');
+  assert.equal(links[1].text,'Download &amp; install');
+  assert.equal(links[1].href,'download.html');
   const how = home.match(/<section[^>]*id="how"[^>]*>([\s\S]*?)<\/section>/)[1];
   for (const step of ['Register free','Install or open the app','Use it with customers']) assert(how.includes(step));
   assert.doesNotMatch(how,/checkout\.html|Join free|register interest/i);
@@ -92,11 +92,12 @@ test('local-first limitations and optional updates stay explicit and separate', 
 });
 
 
-test('public pages do not retain bypass links or no-registration promises', () => {
+test('public pages only link approved registration and gated app routes without no-registration promises', () => {
   for (const page of pages) {
     const source = html(page);
     const appLinks = anchors(source).filter(link => link.href?.startsWith('https://loyalty-for-all-community.sammielee.chatgpt.site'));
-    for (const link of appLinks) assert([app, `${app.replace('/register','')}/community/privacy.html`, `${app.replace('/register','')}/community/terms.html`].includes(link.href), `${page}: unexpected app entrypoint`);
+    const installEntries = page === 'download.html' ? [app.replace('/register','') + '/community/?install=1', app.replace('/register','') + '/community/'] : [];
+    for (const link of appLinks) assert([...installEntries, app, `${app.replace('/register','')}/community/privacy.html`, `${app.replace('/register','')}/community/terms.html`].includes(link.href), `${page}: unexpected app entrypoint`);
     assert.doesNotMatch(source, /no account or registration|without an account|without registration|no compulsory registration|does not require registration|no account is required|registration remains separate in the app’s Insights/i, page);
   }
   for (const page of ['index.html','pricing.html','download.html']) {

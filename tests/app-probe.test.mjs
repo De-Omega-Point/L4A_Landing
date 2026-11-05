@@ -10,7 +10,7 @@ function fixture(overrides = {}) {
     calls.push({path, options});
     if (overrides[path]) return overrides[path](options);
     if (path === '/register') return new Response(form);
-    if (['/community','/community/','/community/index.html'].includes(path)) return new Response(null, {status:303,headers:{Location:'/register'}});
+    if (['/community','/community/','/community/index.html'].includes(path)) return new Response(null, {status:303,headers:{Location:'/community/register'}});
     if (['/community/manifest.webmanifest','/community/js/app.js','/community/service-worker.js'].includes(path)) return Response.json({code:'registration_required'},{status:403});
     if (path === '/api/registrations') {
       if (options.method === 'POST') return Response.json({code:'invalid_input'},{status:options.headers.Origin === url.origin ? 400 : 403});
@@ -87,4 +87,10 @@ test('public redirects do not relax registration or protected app gate expectati
   await assert.rejects(checkApp(fixture({'/register': () => new Response(null,{status:307,headers:{Location:'/elsewhere'}})}).fetcher), /HTTP 307/);
   await assert.rejects(checkApp(fixture({'/community/index.html': () => new Response(null,{status:307,headers:{Location:'/community/'}})}).fetcher), /unregistered app navigation must be gated/);
   await assert.rejects(checkApp(fixture({'/community/js/app.js': () => new Response(null,{status:307,headers:{Location:'/register'}})}).fetcher), /unregistered app asset must be gated/);
+});
+
+test('protected navigation keeps the verified in-scope registration destination', async () => {
+  for (const location of ['/register', '/community/', 'https://untrusted.example/register']) {
+    await assert.rejects(checkApp(fixture({'/community/': () => new Response(null, {status:303,headers:{Location:location}})}).fetcher), /registration destination/);
+  }
 });

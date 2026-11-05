@@ -41,7 +41,7 @@ export async function checkApp(fetcher = fetch) {
   for (const path of ['/community', '/community/', '/community/index.html']) {
     const response = await request(path);
     assert.equal(response.status, 303, `${path}: unregistered app navigation must be gated.`);
-    assert.equal(new URL(response.headers.get('Location'), origin).href, `${origin}/register`, `${path}: registration destination`);
+    assert.equal(new URL(response.headers.get('Location'), origin).href, `${origin}/community/register`, `${path}: registration destination`);
   }
   for (const path of ['/community/manifest.webmanifest', '/community/js/app.js', '/community/service-worker.js']) {
     const response = await request(path);

@@ -1,0 +1,29 @@
+/* Shared download and community entry page. */
+.install-hero h1 { font-size: clamp(2.6rem, 6vw, 4.7rem); max-width: 15ch; margin-top: 18px; }
+.install-hero .hero-grid { gap: clamp(28px, 6vw, 80px); }
+.install-card { padding: clamp(24px, 4vw, 40px); background: var(--ink); border-radius: 28px; color: white; box-shadow: var(--shadow); }
+.install-card h2 { font-size: 2rem; margin-top: 18px; letter-spacing: -.04em; }
+.install-card p { color: #d9e4df; }
+.app-icon { display: block; width: 112px; height: 112px; padding: 5px; margin-bottom: 22px; background: white; border-radius: 24px; }
+.app-icon img { width: 100%; height: 100%; object-fit: contain; }
+.app-facts { list-style: none; padding: 0; margin: 26px 0; }
+.app-facts li { display: flex; gap: 14px; padding: 12px 0; border-top: 1px solid #3b514a; }
+.app-facts strong { color: var(--accent); }
+.card-guide-link { color: #fff; font-weight: 700; display: block; padding: 8px 0; }
+.card-guide-link:hover { color: var(--accent); }
+.guide-layout { display: grid; gap: 28px; align-items: start; }
+.guide-layout h2 { margin-top: 16px; }
+#device-picker { margin-top: 28px; }
+#device-picker select { margin: 8px 0; border-color: #829c91; }
+.guide-panel { background: #fff; border: 1px solid var(--line); border-top: 5px solid var(--brand); padding: clamp(20px, 4vw, 36px); border-radius: 18px; box-shadow: var(--shadow); }
+.guide-panel article + article { border-top: 1px solid var(--line); padding-top: 24px; margin-top: 24px; }
+.guides-enhanced .guide-panel article { border: 0; padding-top: 0; margin-top: 0; }
+.guide-label { font-weight: 800; font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; color: var(--brand); }
+.guide-panel h3 { font-size: 1.5rem; margin-top: 10px; }
+.install-steps { padding-left: 24px; margin: 20px 0; }
+.install-steps li { padding-left: 5px; margin-bottom: 16px; }
+.install-steps li::marker { font-weight: 800; color: var(--brand); }
+.guide-open { margin-top: 12px; }
+.service-address { font-weight: 700; font-size: .9rem; background: var(--wash); padding: 12px; border-radius: 8px; overflow-wrap: anywhere; }
+@media (min-width: 780px) { .guide-layout { grid-template-columns: .8fr 1.2fr; gap: 64px; } }
+@media (max-width: 400px) { .install-hero h1 { font-size: 2.5rem; } .install-hero .btn { padding: 12px; } }
