@@ -1,39 +1,34 @@
-# Loyalty-4-All storefront registration-first candidate
+# Loyalty-4-All landing copy and read-only CI correction
 
-Updated: 18 October 2026 (UTC)
+Updated: 20 November 2026 (UTC)
 Repository: https://github.com/De-Omega-Point/L4A_Landing
-Base: published storefront commit `df3579f`
-Status: local-only candidate; no commit, push or publication in this task
+Base: `14c7f70bb2c0b16d6e0800817526e21bd98364f6` (current main checked before work)
+Scope: separate draft PR candidate; no merge, publication or Sites app changes
 
-## Outcome
+## Change
 
-The main journey is landing page → free registration on the existing app host → optional browser installation or browser use → set up a reward and use it with customers. Every **Start using Loyalty4All** button and the public app URL configuration now points to `https://loyalty-for-all-community.sammielee.chatgpt.site/register`. **See how it works** remains the secondary action. The original seven-page structure, official logo, design and product-focused navigation are preserved, without pilot promotion.
+Replace the outdated required-registration journey with **Get Loyalty-4-All** → `https://de-omega-point.com/apps/` → the public Community Edition app. No account, password or payment is needed; browser installation is optional. The installation guide retains its two direct `/community/?install=1` links and returning-user `/community/` link. App legal links use canonical `/community/privacy` and `/community/terms`.
 
-Registration is required and free, with no password or payment. Marketing consent remains a separate, optional choice. App registrant contact details are stored privately in the app service's central database, separately from customer records held in the browser. The server-issued Product ID is a reference, not a password, verified identity or proof of paid access. The old on-device Product ID is now explained as a separate local workspace ID. Registration is not a backup or a cross-device recovery service.
+Remove registration and Product ID requirements from current instructions; label older registration references historical. Keep original browser/profile and local backup guidance, and warn that a new installation can have separate storage. Do not promise offline operation, record recovery, automatic synchronisation, paid features or a connected Portal account flow.
 
-The product website itself does not collect registrations. The legacy `checkout.html` remains optional feedback/support, not checkout or registration. Its composer still requires only a message and privacy acknowledgement; contact details remain optional. Visitors review and choose whether to send through their email service. The status page never confirms registration, delivery or paid access.
+Replace the existing-app CI contract with eight anonymous GETs checking app HTML, manifest, service worker, module, legal notices, CSS and logo. Canonical resources must return HTTP 200 directly with expected media types/content; the manifest must retain `/community/` scope/start URL. No registration API calls, POSTs, cookie or registration persistence expectations remain. This is a public availability probe, not a browser/offline test.
 
 ## Preserved safeguards
 
-- All public app-entry links route to `/register`; legal-notice links remain public.
-- Local customer data, backup responsibilities and absence of automatic multi-device synchronisation remain explicit.
-- Browser installation is optional after registration. Google Play, App Store, APK and ZIP releases remain paused; no native-download or verified-install claims are introduced.
-- Online payments and paid entitlements remain unavailable. Legacy URLs cannot recreate retired payment or access behaviours.
-- CSP still blocks background connections and native form submission. No feedback personal data is stored in localStorage/sessionStorage or this website's URLs.
-- Existing email, clipboard, text-file and legacy-storage safeguards remain unchanged.
-- The full-release manifest comparison, request/body timeouts and overall deadline remain intact.
+- All seven page filenames, navigation, official logo and layout remain.
+- Legacy checkout is optional feedback/support. Message and privacy acknowledgement remain required; contact details remain optional. Visitors review and send through their email service.
+- Email/clipboard/text-file validation, cancellation/race handling, clear behavior, CSP, no background requests and no personal-data persistence remain unchanged.
+- Legacy status cannot confirm receipt, registration, payment or access. No payment or registration functionality is added.
+- Full-release public-byte comparison, revision hashing, request/body timeout and overall deadline remain unchanged. Its production comparison still runs only on main after a separately approved merge; this draft does not publish.
 
-## Validation of this candidate
+## Validation
 
-- `npm run check`: 47 passing tests, seven HTML pages and 114 local references.
-- Added regression coverage rejects app-entry bypass links and obsolete no-registration promises; verifies registration-first steps, separate optional marketing, Product ID/workspace ID language, private registration versus local customer data, and browser-only installation guidance.
-- Updated `scripts/check-app.mjs` for the new app contract. Offline fixture tests cover the expected public registration page, gated app navigation/assets, invalid/forbidden submissions, optional unchecked marketing, old-flow/bypass rejection and service-readiness failures. Its POST bodies contain no details or consent and cannot create a valid registration. Public legal/brand assets may follow at most three manual same-origin redirects; unsafe targets, loops and missing destinations fail. Registration and protected app checks remain strict, with redirect regression tests.
-- JavaScript syntax, HTML IDs/labels/landmarks and Git whitespace checks pass locally.
-- Interactive browser/mobile rendering, actual installation, valid production registration/database insertion and mailbox delivery were not tested in this storefront task.
-- No live app probe, form submission, email, app change, commit, push or publication was performed in this local-only task.
+- `npm run check`: 51 tests passed; seven pages and local references checked.
+- JavaScript syntax and `git diff --check`: passed locally (Node.js 24.22.1).
+- Live probe: passed eight anonymous GET checks using `NODE_USE_ENV_PROXY=1 node scripts/check-app.mjs`. Direct Node networking was refused by the environment; using its configured proxy succeeded without changing probe semantics.
+- Live public worker still identifies cache `v84`; canonical legal routes return HTTP 200. No v86 cutover or live asset changes.
+- Read-only comparison of all 14 currently published pages/assets against the untouched base commit passed (release hash `3ce8cda3660b20ce0e443ba84d6236177ce40324682013941a1165c496253daa`). The candidate itself is not published.
+- Feedback and published-byte regression tests and implementation are unchanged. New fixtures reject gated/missing resources, misleading HTML, redirects, altered manifest scope/start URL and network/body failures.
+- GitHub Actions results belong to the final PR commit and must be checked there; local results are not CI results.
 
-## Coordinated release gate
-
-Publish and verify the separately reviewed registration-first app before publishing this storefront. The currently published app's old optional-registration behaviour is not an acceptable match for this candidate, and the updated live probe is intentionally expected to reject that old flow. Run it after app deployment, then require matching-commit CI and public storefront byte verification. A local passing test suite alone does not establish live registration persistence or successful publication.
-
-Before acquisition campaigns, confirm the support mailbox is monitored and can receive messages. Paid launch remains gated on approved prices/terms, a trusted payment and entitlement backend, authenticated operators and approved downloadable releases. None of those services is activated by this storefront change.
+Not verified here: actual browser/PWA install, physical devices, offline reopening, workspace retention or mailbox delivery. In particular, HTTP availability does not fix or prove resolution of the separately identified v84 offline-readiness defect. Public byte parity of this new candidate is intentionally pending publication; existing parity implementation/tests remain intact.

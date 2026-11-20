@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import vm from 'node:vm';
 
-const app = 'https://loyalty-for-all-community.sammielee.chatgpt.site/register';
+const app = 'https://de-omega-point.com/apps/';
+const appOrigin = 'https://loyalty-for-all-community.sammielee.chatgpt.site';
 const pages = readdirSync('.').filter(path => path.endsWith('.html'));
 const html = page => readFileSync(page, 'utf8');
 const anchors = source => [...source.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map(match => ({
@@ -12,31 +13,32 @@ const anchors = source => [...source.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].m
   text: match[2].replace(/<[^>]*>/g, '').trim()
 }));
 
-test('primary start buttons route through registration with consistent copy', () => {
+test('primary Get buttons route through the public Portal with consistent copy', () => {
   const context = vm.createContext({window:{}});
   vm.runInContext(readFileSync('assets/js/config.js','utf8'),context);
   assert.equal(context.window.L4A_CONFIG.webAppUrl,app);
   assert.equal(context.window.L4A_CONFIG.paymentsEnabled,false);
+  assert.equal(context.window.L4A_CONFIG.privacyVersion,'2026-11-20');
   for (const page of ['index.html','pricing.html','download.html','checkout.html','success.html']) {
     const buttons = anchors(html(page)).filter(link => /\bdata-start-app\b/.test(link.attributes));
-    assert(buttons.length > 0, `${page}: missing registration-first start button`);
+    assert(buttons.length > 0, `${page}: missing Portal button`);
     for (const button of buttons) {
-      assert.equal(button.text,'Start using Loyalty4All',page);
+      assert.equal(button.text,'Get Loyalty-4-All',page);
       assert.equal(button.href,app,page);
     }
   }
 });
 
-test('the home journey explains registration before installation and use', () => {
+test('the home journey explains account-free use and optional installation', () => {
   const home = html('index.html');
   const hero = home.match(/<div class="hero-actions">([\s\S]*?)<\/div>/)[1];
   const links = anchors(hero);
-  assert.equal(links[0].text,'Start using Loyalty4All');
+  assert.equal(links[0].text,'Get Loyalty-4-All');
   assert.equal(links[0].href,app);
   assert.equal(links[1].text,'Download &amp; install');
   assert.equal(links[1].href,'download.html');
   const how = home.match(/<section[^>]*id="how"[^>]*>([\s\S]*?)<\/section>/)[1];
-  for (const step of ['Register free','Install or open the app','Use it with customers']) assert(how.includes(step));
+  for (const step of ['Get the app','Install or open the app','Use it with customers']) assert(how.includes(step));
   assert.doesNotMatch(how,/checkout\.html|Join free|register interest/i);
   assert(home.indexOf('After you’ve used it') > home.lastIndexOf('data-start-app'));
   assert.match(home,/optional and does not sign you up for updates/);
@@ -82,37 +84,39 @@ test('local-first limitations and optional updates stay explicit and separate', 
   assert.match(privacy,/Your business name, preferred reply email and name are optional/);
   assert.match(privacy,/does not register you for the app or subscribe you to updates/);
   assert.match(privacy,/This product website does not collect registrations/);
-  assert.match(privacy,/Registration is required on the app’s website before installation or use/);
-  assert.match(privacy,/registration contact details privately in its central database/);
-  assert.match(privacy,/App registration does not include local customer records/);
+  assert.match(privacy,/do not require an account, password or registration/);
+  assert.match(privacy,/Earlier app versions described registration contact details/);
+  assert.match(privacy,/historical references are not a current access requirement/);
+  assert.match(privacy,/does not connect a Portal account or upload your local workspace/);
   assert.match(privacy,/not a password, verified identity or proof of paid access/);
   assert.match(privacy,/local workspace ID is a separate on-device reference/);
-  assert.match(privacy,/18 October 2026/);
+  assert.match(privacy,/20 November 2026/);
   assert.match(html('download.html'),/does not guarantee offline operation/);
 });
 
 
-test('public pages only link approved registration and gated app routes without no-registration promises', () => {
+test('public app links use canonical routes and copy does not require signup', () => {
   for (const page of pages) {
     const source = html(page);
-    const appLinks = anchors(source).filter(link => link.href?.startsWith('https://loyalty-for-all-community.sammielee.chatgpt.site'));
-    const installEntries = page === 'download.html' ? [app.replace('/register','') + '/community/?install=1', app.replace('/register','') + '/community/'] : [];
-    for (const link of appLinks) assert([...installEntries, app, `${app.replace('/register','')}/community/privacy.html`, `${app.replace('/register','')}/community/terms.html`].includes(link.href), `${page}: unexpected app entrypoint`);
-    assert.doesNotMatch(source, /no account or registration|without an account|without registration|no compulsory registration|does not require registration|no account is required|registration remains separate in the app’s Insights/i, page);
+    const appLinks = anchors(source).filter(link => link.href?.startsWith(appOrigin));
+    const installEntries = page === 'download.html' ? [`${appOrigin}/community/?install=1`, `${appOrigin}/community/`] : [];
+    for (const link of appLinks) assert([...installEntries, `${appOrigin}/community/privacy`, `${appOrigin}/community/terms`].includes(link.href), `${page}: unexpected app entrypoint`);
+    assert.doesNotMatch(source, /register free|registration is required|register if asked|complete registration|registration before|new users register/i, page);
   }
   for (const page of ['index.html','pricing.html','download.html']) {
-    assert.match(html(page), /[Rr]egister/);
-    assert.match(html(page), /[Nn]o password|does not ask for a password/);
-    assert.match(html(page), /[Mm]arketing.{0,40}optional/);
+    assert.match(html(page), /[Nn]o account/);
+    assert.match(html(page), /installation is optional|optionally install|optional browser installation/i);
+    assert.match(html(page), /password or payment/);
   }
 });
 
-test('installation guide distinguishes registration, optional browser install and paused native downloads', () => {
+test('installation guide keeps browser use optional and protects returning local workspaces', () => {
   const source = html('download.html');
-  assert.match(source, /Complete registration and open the app first/);
+  assert.match(source, /Open the live app first/);
   assert.match(source, /Installation is optional/);
   assert.match(source, /Google Play, App Store, APK and ZIP downloads remain paused/);
   assert.match(source, /not a native app-store download/);
-  assert.match(source, /Product ID after registration/);
-  assert.match(source, /local workspace ID is a separate on-device reference/);
+  assert.match(source, /Historical Product IDs do not restore local records/);
+  assert.match(source, /local workspace ID is an on-device reference/);
+  assert.match(source, /Keep the original workspace intact and export a backup before moving/);
 });

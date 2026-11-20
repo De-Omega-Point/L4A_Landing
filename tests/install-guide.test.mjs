@@ -57,7 +57,7 @@ test('all five instruction panels and real app links work without JavaScript', (
   assert.equal([...html.matchAll(/href="https:\/\/loyalty-for-all-community\.sammielee\.chatgpt\.site\/community\/\?install=1"/g)].length, 2);
   assert.match(html, /same browser and profile/);
   assert.match(html, /L4A.Help@De-Omega-Point.Com/);
-  assert.match(html, /working app and registration still open/);
+  assert.match(html, /working app still opens/);
   assert.doesNotMatch(html, /rel="manifest"|data-download-button|download=/i);
 });
 test('guide neither installs this storefront nor reads or sends user records', () => {
@@ -65,9 +65,9 @@ test('guide neither installs this storefront nor reads or sends user records', (
   assert.doesNotMatch(html, /<form|serviceWorker|rel="manifest"/);
 });
 
-test('every product logo links home and unexpected registration never implies recovery', () => {
+test('every product logo links home and installation never implies recovery', () => {
   const logos = [...html.matchAll(/<a\b[^>]*href="index.html"[^>]*aria-label="Loyalty-4-All home"[^>]*>[\s\S]*?<img[^>]+loyalty-4-all-logo\.png[^>]*>/g)];
   assert.equal(logos.length, 2);
-  assert.match(html, /Registering again does not recover existing local records/);
+  assert.match(html, /Installing or opening another browser does not recover existing local records/);
   assert.match(html, /return to your original browser and profile or contact support/);
 });

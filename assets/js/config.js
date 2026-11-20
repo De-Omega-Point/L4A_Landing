@@ -4,6 +4,6 @@ window.L4A_CONFIG = Object.freeze({
   mode: 'community-adoption',
   paymentsEnabled: false,
   supportEmail: 'hello@de-omega-point.com',
-  webAppUrl: 'https://loyalty-for-all-community.sammielee.chatgpt.site/register',
-  privacyVersion: '2026-10-18'
+  webAppUrl: 'https://de-omega-point.com/apps/',
+  privacyVersion: '2026-11-20'
 });

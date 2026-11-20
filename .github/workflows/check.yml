@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Probe the existing public app without creating a registration
+      - name: Verify public app and canonical assets with anonymous GETs
         run: node scripts/check-app.mjs
   published:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

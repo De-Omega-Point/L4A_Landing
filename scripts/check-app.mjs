@@ -1,74 +1,54 @@
 import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
 
-// Run only after the registration-first app release is deployed. All POSTs
-// deliberately omit registration details and consent, so no record is created.
+const origin = 'https://loyalty-for-all-community.sammielee.chatgpt.site';
+
+// Public availability/contract check only: no browser storage, auth, API calls or writes.
+// Canonical routes must serve directly. Never follow a redirect to a sign-in page.
 export async function checkApp(fetcher = fetch) {
-  const origin = 'https://loyalty-for-all-community.sammielee.chatgpt.site';
-  const request = (path, options = {}) => fetcher(new URL(path, origin), {
-    signal: AbortSignal.timeout(20000), redirect: 'manual', ...options
-  });
-  const get = async (path, allowPublicRedirects = false) => {
-    let target = new URL(path, origin);
-    const visited = new Set([target.href]);
-    for (let redirects = 0; ; redirects++) {
-      const response = await request(target);
-      if (!allowPublicRedirects || ![301, 302, 303, 307, 308].includes(response.status)) {
-        assert.equal(response.status, 200, `${path}: HTTP ${response.status}`);
-        return response.text();
-      }
-      assert(redirects < 3, `${path}: too many public redirects`);
-      const location = response.headers.get('Location');
-      assert(location, `${path}: public redirect missing Location`);
-      const next = new URL(location, target);
-      assert(next.origin === origin && !next.username && !next.password, `${path}: unsafe public redirect target`);
-      assert(!visited.has(next.href), `${path}: public redirect loop`);
-      visited.add(next.href);
-      target = next;
-    }
+  const get = async (path, type) => {
+    const response = await fetcher(new URL(path, origin), {
+      method: 'GET', redirect: 'manual', credentials: 'omit',
+      signal: AbortSignal.timeout(20000)
+    });
+    assert.equal(response.status, 200, `${path}: expected public HTTP 200, got HTTP ${response.status}`);
+    assert.match(response.headers.get('content-type') || '', type, `${path}: unexpected content type`);
+    return response;
   };
-  const registration = await get('/register');
-  assert.match(registration, /Register for Loyalty-4-All/, 'Registration form missing.');
-  for (const name of ['kind', 'contactName', 'email', 'termsAccepted', 'privacyAcknowledged', 'marketingConsent']) {
-    assert(registration.includes(`name="${name}"`), `Registration field missing: ${name}`);
-  }
-  assert.doesNotMatch(registration, /type="password"/, 'Registration must not request a password.');
-  const marketing = registration.match(/<input\b[^>]*name="marketingConsent"[^>]*>/)?.[0];
-  assert(marketing, 'Optional marketing control missing.');
-  assert.doesNotMatch(marketing, /\b(?:required|checked)(?:\s|=|\/?>)/, 'Marketing must be optional and unchecked.');
-  for (const path of ['/community/privacy.html', '/community/terms.html', '/community/css/styles.css', '/community/assets/loyalty-4-all-logo.png']) await get(path, true);
+  const html = await (await get('/community/', /text\/html/i)).text();
+  assert.match(html, /id=["']appShell["']/, 'Public app shell missing');
+  assert.match(html, /<script\b[^>]*src=["']js\/app\.js["']/, 'Public app module missing');
+  assert.match(html, /Counter/, 'Counter entry missing');
+  assert.match(html, /no sign-up|no account|without an account/i, 'Account-free app description missing');
 
-  for (const path of ['/community', '/community/', '/community/index.html']) {
-    const response = await request(path);
-    assert.equal(response.status, 303, `${path}: unregistered app navigation must be gated.`);
-    assert.equal(new URL(response.headers.get('Location'), origin).href, `${origin}/community/register`, `${path}: registration destination`);
+  const manifestPath = '/community/manifest.webmanifest';
+  const manifest = await (await get(manifestPath, /application\/(?:manifest\+json|json)/i)).json();
+  assert.match(manifest.name || '', /Loyalty-4-All/, 'Unexpected manifest name');
+  for (const key of ['start_url', 'scope']) {
+    assert.equal(typeof manifest[key], 'string', `Manifest ${key} missing`);
+    assert.equal(new URL(manifest[key], origin + manifestPath).href, origin + '/community/', `Manifest ${key} changed`);
   }
-  for (const path of ['/community/manifest.webmanifest', '/community/js/app.js', '/community/service-worker.js']) {
-    const response = await request(path);
-    assert.equal(response.status, 403, `${path}: unregistered app asset must be gated.`);
-    assert.equal((await response.json()).code, 'registration_required', `${path}: gate response`);
-  }
+  assert.equal(manifest.display, 'standalone', 'Unexpected manifest display');
 
-  const status = await request('/api/registrations');
-  assert.equal(status.status, 200, 'Registration service/schema unavailable.');
-  assert.equal((await status.json()).registered, false, 'Anonymous probe must not appear registered.');
-  const setCookie = status.headers.get('set-cookie') || '';
-  assert.match(setCookie, /^__Host-l4a_registration=[0-9a-f]{64};/u, 'Registration receipt cookie missing.');
-  for (const attribute of ['HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/']) assert(setCookie.includes(attribute), `Cookie missing ${attribute}`);
-  // Keep the temporary receipt only in memory; never log it or persist it.
-  const cookie = setCookie.split(';')[0];
-  const invalid = await request('/api/registrations', {
-    method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin, Cookie: cookie }, body: '{}'
-  });
-  assert.equal(invalid.status, 400, 'Empty registration must be rejected without creating a record.');
-  const forbidden = await request('/api/registrations', {
-    method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://de-omega-point.github.io', Cookie: cookie }, body: '{}'
-  });
-  assert.equal(forbidden.status, 403, 'Cross-origin registration must be rejected.');
-  return 'Registration entrypoint, legal notices, branding, direct-entry gate and invalid-input safeguards passed. No registration was created.';
+  const worker = await (await get('/community/service-worker.js', /(?:application|text)\/javascript/i)).text();
+  assert.match(worker, /loyalty-4-all-community-/, 'Community worker cache marker missing');
+  for (const event of ['install', 'fetch']) {
+    assert.match(worker, new RegExp(`addEventListener\\(['"]${event}['"]`), `Worker ${event} handler missing`);
+  }
+  const app = await (await get('/community/js/app.js', /(?:application|text)\/javascript/i)).text();
+  assert.match(app, /import\s/, 'App module content missing');
+  for (const [route, heading] of [['privacy', /<h1\b[^>]*>Privacy Notice<\/h1>/i], ['terms', /<h1\b[^>]*>Community Edition Terms<\/h1>/i]]) {
+    const legal = await (await get(`/community/${route}`, /text\/html/i)).text();
+    assert.match(legal, heading, `${route}: legal notice missing`);
+  }
+  const css = await (await get('/community/css/styles.css', /text\/css/i)).text();
+  assert.match(css, /\{[^}]+\}/, 'App styles missing');
+  const logo = new Uint8Array(await (await get('/community/assets/loyalty-4-all-logo.png', /image\/png/i)).arrayBuffer());
+  assert.deepEqual([...logo.slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10], 'Official logo is not a PNG');
+  return 'Public Community app, manifest, service worker, module, canonical legal routes, styles and logo passed anonymous GET checks. No registration API, cookies or POSTs used. This does not prove installation, offline readiness or workspace retention.';
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  console.log(await checkApp());
-  console.log('Valid registration/database insertion, browser rendering and installation were not tested.');
+  try { console.log(await checkApp()); }
+  catch (error) { console.error(error); process.exitCode = 1; }
 }
